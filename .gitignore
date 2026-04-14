@@ -1,0 +1,7 @@
+ignored/
+raylib-5.5_win64_mingw-w64/
+
+*.exe
+
+.tof.conf
+tof_output.md
