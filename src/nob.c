@@ -1,0 +1,76 @@
+#define NOB_IMPLEMENTATION
+#define NOB_STRIP_PREFIX
+#include "../nob.h"
+
+#define SRC_DIR "src/"
+#define BIN_DIR "bin/"
+
+void announce_build_method(char *compiler, char *os) {
+    printf("\e[1;34m Compiling...: \e[1;31m%s\e[m on \e[1;32m%s\e[m:\n", compiler, os);
+}
+
+int main(int argc, char **argv) {
+    NOB_GO_REBUILD_URSELF(argc, argv);
+    Cmd cmd = {0};
+    #define C(...) cmd_append(&cmd, __VA_ARGS__);
+    #define RUN if (!cmd_run_sync_and_reset(&cmd)) goto cmd_failed;
+
+    // flags
+    bool flag_force = false;
+
+    const char *program_name = shift(argv, argc);
+    while (argc > 0) {
+        const char *flag = shift(argv, argc);
+        if (strcmp(flag, "f") == 0) {
+            flag_force = true;
+        } else {
+            printf("Unknown flag: %s\n", flag);
+            return 1;
+        }
+    }
+int nr = nob_needs_rebuild1("main.exe", "main.c");
+    if (nr < 0) return 1;
+
+    if (nr || flag_force) {
+
+    #ifdef _WIN32
+        announce_build_method("gcc", "Windows");
+        C("gcc");
+        C("-Wall", "-Wextra");
+        C("-std=c99");
+        C("-I./raylib-5.5_win64_mingw-w64/include/");
+        // C("-DRELEASE");
+        // optimizations!
+        C("-O3", "-march=native", "-ffast-math", "-flto", "-fno-math-errno");
+        // // tell me if you vectorized
+        // C("-fopt-info-vec");
+        // // tell me which loops were vectorized
+        // C("-fopt-info-vec-optimized", "-fopt-info-vec-missed");
+        C("-o", BIN_DIR"main.exe");
+        C(SRC_DIR"main.c");
+        C("-L./raylib-5.5_win64_mingw-w64/lib/");
+        C("-lraylib", "-lgdi32", "-lwinmm");
+        RUN;
+
+    #else // _WIN32
+        announce_build_method("gcc", "Linux");
+        C("gcc");
+        C("-Wall", "-Wextra");
+        C("-std=gnu99");
+        C("-I./raylib-5.5_linux_amd64/include/");
+        // C("-DRELEASE");
+        C("-o", BIN_DIR"main");
+        C(SRC_DIR"main.c");
+        C("-L./raylib-5.5_linux_amd64/lib/");
+        C("-l:libraylib.a", "-lm");
+        RUN;
+    #endif // _WIN32
+    }
+
+    C("./"BIN_DIR"main"); RUN //, Forrest, Run!
+
+    return 0;
+cmd_failed: // joking, bro
+    printf("\e[1;31m ^\e[m Last Command Failed!\n");
+    return 1;
+}
