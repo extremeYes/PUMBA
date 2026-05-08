@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
             return 1;
         }
     }
-int nr = nob_needs_rebuild1("main.exe", "main.c");
+int nr = nob_needs_rebuild1(BIN_DIR"main.exe", SRC_DIR"main.c");
     if (nr < 0) return 1;
 
     if (nr || flag_force) {
